@@ -1,29 +1,35 @@
+import asyncio
+
+
 class Schema(type):
-    def __init__(cls):
+    def __init__(cls, name, bases, dict):
+        super().__init__(name, bases, dict)
         cls._next_id = 0
         cls._schema_name = cls.__name__.lower()
         cls._keys_name = f'{cls._schema_name}_ids'
         cls._r = None
 
-    def get_all(cls):
-        keys = cls._r.smembers(cls._keys_name)
-        return (cls._r.get(cls._id_from_key(k)) for k in keys)
+    # async def get_all(cls):
+    #     keys = await cls._r.smembers(cls._keys_name)
+    #     return (cls._r.get(cls._id_from_key(k)) for k in keys)
+    #
+    # async def get(cls, id_):
+    #     raw_entity = await cls._r.hgetall(id_)
+    #     return cls._entity_from_raw(raw_entity, id_)
 
-    def get(cls, id_):
-        raw_entity = cls._r.hgetall(id_)
-        return cls._entity_from_raw(raw_entity, id_)
-
-    def add(cls, entity):
+    async def add(cls, entity):
         key = cls._key_from_id(cls._next_id)
         cls._next_id += 1
-        cls._r.sadd(cls._keys_name, key)
-        return cls._r.hmset(key, vars(entity))
+        return await asyncio.gather(
+            cls._r.sadd(cls._keys_name, key),
+            cls._r.hmset_dict(key, vars(entity))
+        )
 
-    def remove(cls, id_):
-        return cls._r.delete(id_)
-
-    def exists(cls, id_):
-        return cls._r.exists(id_)
+    # def remove(cls, id_):
+    #     return cls._r.delete(id_)
+    #
+    # def exists(cls, id_):
+    #     return cls._r.exists(id_)
 
     def _entity_from_raw(cls, raw_entity, id_):
         raw_entity.id_ = id_

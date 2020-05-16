@@ -1,3 +1,6 @@
+import asyncio
+
+
 class Diseases:
     def __init__(self, db, *diseases):
         for d in diseases:
@@ -11,4 +14,4 @@ class DiseasesEndpoints:
             e._s = session
 
     async def pick_many(self):
-        await asyncio.gather(e.pick() for e in self.endpoints)
+        await asyncio.gather(*(e.pick() for e in self.endpoints))

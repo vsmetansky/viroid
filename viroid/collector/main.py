@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import aiohttp
 import aioredis
@@ -12,16 +13,20 @@ async def cleanup(redis, session):
     redis.close()
     await redis.wait_closed()
     await session.close()
+    logging.info('Bye!')
 
 
 async def main():
     try:
-        session = aiohttp.ClientSession(timeout=60)
+        logging.basicConfig(level=logging.INFO)
+        session = aiohttp.ClientSession()
         redis = await aioredis.create_redis_pool(('localhost', 6379))
         diseases = Diseases(redis, Covid19)
         endpoints = DiseasesEndpoints(session, Covid19Endpoint)
         while True:
             await endpoints.pick_many()
+            logging.info('Data updated...')
+            await asyncio.sleep(120)
     finally:
         await cleanup(redis, session)
 
