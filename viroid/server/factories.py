@@ -1,6 +1,6 @@
 from aiohttp import web
 
-from viroid.routes import routes
+from viroid.server.routes import routes
 
 
 def create_app():
