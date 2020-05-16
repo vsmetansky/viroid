@@ -1,3 +1,5 @@
+from datetime import datetime as dt
+
 from viroid.collector.models.disease import Disease
 
 
@@ -9,3 +11,12 @@ class Covid19(Disease):
             date_updated=date_updated
         )
         self.deaths_num = deaths_num
+
+    @classmethod
+    def _compare_entities(cls, prev_entity, entity):
+        try:
+            date_prev = dt.strptime(prev_entity.date_updated, '%d/%m/%Y')
+            date = dt.strptime(entity.date_updated, '%d/%m/%Y')
+            return date_prev < date
+        except AttributeError:
+            return True

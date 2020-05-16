@@ -8,6 +8,8 @@ from viroid.collector.aggregates import Diseases, DiseasesEndpoints
 from viroid.collector.endpoints.covid_19 import Covid19Endpoint
 from viroid.collector.models.covid_19 import Covid19
 
+UPDATE_PERIOD = 2  # seconds
+
 
 async def cleanup(redis, session):
     redis.close()
@@ -26,7 +28,7 @@ async def main():
         while True:
             await endpoints.pick_many()
             logging.info('Data updated...')
-            await asyncio.sleep(120)
+            await asyncio.sleep(UPDATE_PERIOD)
     finally:
         await cleanup(redis, session)
 
