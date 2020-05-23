@@ -7,3 +7,6 @@ hiredis==1.0.1
 idna==2.9
 multidict==4.7.5
 yarl==1.4.2
+
+pandas~=1.0.3
+setuptools~=44.0.0
