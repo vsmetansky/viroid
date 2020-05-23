@@ -6,17 +6,28 @@ class Endpoint:
     @classmethod
     async def pick(cls):
         """Gets data from API and writes it to Redis."""
-        async with cls._s.get(cls._url) as response:
-            entities = await cls._filter_raw_entities(response)
-            await cls._save_entities(entities)
+        async with cls._fetch() as response:
+            raw_entities = await cls._get_raw_entities(response)
+            entities = cls._filter_raw_entities(raw_entities)
+            processed_entities = cls._process_entities(entities)
+            await cls._save_entities(processed_entities)
 
     @classmethod
-    async def _filter_raw_entities(cls, response):
+    def _fetch(cls):
+        return cls._s.get(cls._url)
+
+    @classmethod
+    async def _get_raw_entities(cls, response):
+        """Extracts needed data from response."""
+        return await response.json()
+
+    @classmethod
+    def _filter_raw_entities(cls, raw_entities):
         """Validates and filters raw data.
 
         Returns a generator of valid data.
         """
-        pass
+        return raw_entities
 
     @classmethod
     def _is_valid_entity(cls, entity):
@@ -26,6 +37,10 @@ class Endpoint:
         and returns True or False.
         """
         pass
+
+    @classmethod
+    def _process_entities(cls, entities):
+        return entities
 
     @classmethod
     async def _save_entities(cls, entities):

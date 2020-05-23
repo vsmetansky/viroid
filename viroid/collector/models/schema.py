@@ -9,28 +9,16 @@ class Schema(type):
         cls._keys_name = f'{cls._schema_name}_keys'
         cls._r = None
 
-    # async def get_all(cls):
-    #     keys = await cls._r.smembers(cls._keys_name)
-    #     return (cls._r.get(cls._id_from_key(k)) for k in keys)
-    #
     async def get(cls, id_):
         raw_entity = await cls._r.hgetall(cls._key_from_id(id_))
         return cls._entity_from_raw(raw_entity)
 
     async def add(cls, entity):
-        prev_entity = await cls.get(entity.country_code)
-        if cls._compare_entities(prev_entity, entity):
-            key = cls._key_from_id(entity.country_code)
-            return await asyncio.gather(
-                cls._r.sadd(cls._keys_name, key),
-                cls._r.hmset_dict(key, vars(entity))
-            )
-
-    # def remove(cls, id_):
-    #     return cls._r.delete(id_)
-    #
-    # def exists(cls, id_):
-    #     return cls._r.exists(id_)
+        key = cls._key_from_id(f'{entity.country_code}|{entity.date_updated}')
+        return await asyncio.gather(
+            cls._r.sadd(cls._keys_name, key),
+            cls._r.hmset_dict(key, vars(entity))
+        )
 
     def _entity_from_raw(cls, raw_entity):
         if raw_entity:
@@ -54,6 +42,3 @@ class Schema(type):
 
     def _id_from_key(cls, key):
         return key.split(':').pop()
-
-    def _compare_entities(cls, prev_entity, entity):
-        return True

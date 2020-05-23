@@ -9,8 +9,11 @@ class Covid19Endpoint(Endpoint):
     _url = 'https://opendata.ecdc.europa.eu/covid19/casedistribution/json/'
 
     @classmethod
-    async def _filter_raw_entities(cls, response):
-        raw_entities = (await response.json()).get('records')
+    async def _get_raw_entities(cls, response):
+        return (await response.json()).get('records')
+
+    @classmethod
+    def _filter_raw_entities(cls, raw_entities):
         return (r_e for r_e in raw_entities if cls._is_valid_entity(r_e))
 
     @classmethod

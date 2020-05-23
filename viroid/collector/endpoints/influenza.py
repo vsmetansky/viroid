@@ -1,24 +1,41 @@
 import asyncio
+from datetime import date
 
 import pandas as pd
+
 from viroid.collector.endpoints.endpoint import Endpoint
-from viroid.collector.models.disease import Disease
+from viroid.collector.models.influenza import Influenza
 
 
 class InfluenzaEndpoint(Endpoint):
-    _model = Disease
-    _url = 'https://apps.who.int/flumart/Reserved.ReportViewerWebControl.axd?ReportSession=v45tez4513m0lc55tbvzhw45' \
-           '&Culture=1033&CultureOverrides=True&UICulture=1033&UICultureOverrides=True&ReportStack=1&ControlID' \
-           '=a4ebbe704a1444b7bbd1d6105bc9f079&OpType=Export&FileName=Rpt_LabSurveillanceDataLatestWeekByCtry' \
-           '&ContentDisposition=OnlyHtmlInline&Format=CSV '
+    _model = Influenza
+    _url = 'https://atlas.ecdc.europa.eu/Public/AtlasService/rest/GetMeasureResultsForTimePeriodAndGeoLevel' \
+           '?measureIds=409230,409231,4092329&timeCodes=&startTimeCode={0}-W{1}&endTimeCodeExcl={2}-W{1}&geoLevel=1'
+    _period = 2
 
     @classmethod
-    async def _save_data(cls, data):
-        raw_entities = pd.read_csv(await response.text(), header=0)
+    def _fetch(cls):
+        year, week = date.today().isocalendar()[:2]
+        return cls._s.get(cls._url.format(year, week, year - cls._period))
+
+    @classmethod
+    async def _get_raw_entities(cls, response):
+        return (await response.json()).get('MeasureResults')
+
+    @classmethod
+    def _filter_raw_entities(cls, raw_entities):
+        return pd.DataFrame(raw_entities).filter(['dGeoMnemonic', 'TimeCode', 'N'])
+
+    @classmethod
+    def _process_entities(cls, entities):
+        return entities.groupby(['dGeoMnemonic', 'TimeCode']).agg('sum')
+
+    @classmethod
+    async def _save_entities(cls, entities):
         await asyncio.gather(*(cls._model.add(
             cls._model(
-                cases_num=r_e.get('cases'),
-                country_code=r_e.get('countryterritoryCode'),
-                date_updated=r_e.get('dateRep')
+                cases_num=e.N,
+                country_code=e.Index[0],
+                date_updated=e.Index[1]
             )
-        ) for r_e in raw_entities))
+        ) for e in entities.itertuples()))
