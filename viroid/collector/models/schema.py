@@ -1,5 +1,4 @@
 import asyncio
-from pprint import pprint
 
 
 class Schema(type):
@@ -35,7 +34,7 @@ class Schema(type):
         Returns:
             raw_entity (a dict) with correct types of the values
         """
-        return {k.decode():v.decode() for k, v in raw_entity.items()}
+        return {k.decode(): v.decode() for k, v in raw_entity.items()}
 
     def _key_from_id(cls, id_):
         return f'{cls._schema_name}:{id_}'

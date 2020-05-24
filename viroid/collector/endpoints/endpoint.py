@@ -9,8 +9,8 @@ class Endpoint:
         async with cls._fetch() as response:
             raw_entities = await cls._get_raw_entities(response)
             entities = cls._filter_raw_entities(raw_entities)
-            processed_entities = cls._process_entities(entities)
-            await cls._save_entities(processed_entities)
+            preprocessed_entities = cls._preprocess_entities(entities)
+            await cls._save_entities(preprocessed_entities)
 
     @classmethod
     def _fetch(cls):
@@ -36,10 +36,11 @@ class Endpoint:
         The method is used by _filter_raw_data
         and returns True or False.
         """
-        pass
+        return True
 
     @classmethod
-    def _process_entities(cls, entities):
+    def _preprocess_entities(cls, entities):
+        """Usually suits for data regrouping, etc."""
         return entities
 
     @classmethod

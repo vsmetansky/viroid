@@ -3,6 +3,7 @@ from datetime import date
 
 import pandas as pd
 
+from viroid.collector.constants import COUNTRY_CODES
 from viroid.collector.endpoints.endpoint import Endpoint
 from viroid.collector.models.influenza import Influenza
 
@@ -16,7 +17,7 @@ class InfluenzaEndpoint(Endpoint):
     @classmethod
     def _fetch(cls):
         year, week = date.today().isocalendar()[:2]
-        return cls._s.get(cls._url.format(year, week, year - cls._period))
+        return cls._s.get(cls._url.format(year - cls._period, week, year))
 
     @classmethod
     async def _get_raw_entities(cls, response):
@@ -24,10 +25,12 @@ class InfluenzaEndpoint(Endpoint):
 
     @classmethod
     def _filter_raw_entities(cls, raw_entities):
-        return pd.DataFrame(raw_entities).filter(['dGeoMnemonic', 'TimeCode', 'N'])
+        # do something with removing invalid country codes
+        return pd.DataFrame(raw_entities).filter(['dGeoMnemonic', 'TimeCode', 'N']).map(
+            lambda x: x.dGeoMnemonic in COUNTRY_CODES)
 
     @classmethod
-    def _process_entities(cls, entities):
+    def _preprocess_entities(cls, entities):
         return entities.groupby(['dGeoMnemonic', 'TimeCode']).agg('sum')
 
     @classmethod

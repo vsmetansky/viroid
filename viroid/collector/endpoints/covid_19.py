@@ -18,7 +18,7 @@ class Covid19Endpoint(Endpoint):
 
     @classmethod
     def _is_valid_entity(cls, entity):
-        return entity.get('countryterritoryCode') and entity.get('dateRep')
+        return entity.get('countryterritoryCode') and entity.get('dateRep') and int(entity.get('cases')) >= 0
 
     @classmethod
     async def _save_entities(cls, entities):
