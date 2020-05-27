@@ -1,5 +1,7 @@
 import asyncio
+import logging
 
+from viroid.collector.constants import COUNTRY_CODES
 from viroid.collector.endpoints.endpoint import Endpoint
 from viroid.collector.models.covid_19 import Covid19
 
@@ -18,15 +20,16 @@ class Covid19Endpoint(Endpoint):
 
     @classmethod
     def _is_valid_entity(cls, entity):
-        return entity.get('countryterritoryCode') and entity.get('dateRep') and int(entity.get('cases')) >= 0
+        return entity.get('countryterritoryCode') and entity.get('dateRep')
 
     @classmethod
     async def _save_entities(cls, entities):
-        await asyncio.gather(*(cls._model.add(
-            cls._model(
-                cases_num=e.get('cases'),
-                deaths_num=e.get('deaths'),
-                country_code=e.get('countryterritoryCode'),
-                date_updated=e.get('dateRep')
+        for e in entities:
+            await cls._model.add(
+                cls._model(
+                    cases_num=e.get('cases'),
+                    deaths_num=e.get('deaths'),
+                    country_code=e.get('countryterritoryCode'),
+                    date_updated=e.get('dateRep')
+                )
             )
-        ) for e in entities))

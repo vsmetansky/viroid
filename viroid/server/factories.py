@@ -1,6 +1,5 @@
 import asyncio
 
-import aioredis
 from aiohttp import web
 
 from viroid.server.aggregates import Diseases

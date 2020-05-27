@@ -2,8 +2,8 @@ import asyncio
 
 
 class Schema(type):
-    def __init__(cls, name, bases, dict):
-        super().__init__(name, bases, dict)
+    def __init__(cls, name, bases, dict_):
+        super().__init__(name, bases, dict_)
         cls._schema_name = cls.__name__.lower()
         cls._keys_name = f'{cls._schema_name}_keys'
         cls._r = None
@@ -16,7 +16,7 @@ class Schema(type):
         key = cls._key_from_id(f'{entity.country_code}|{entity.date_updated}')
         return await asyncio.gather(
             cls._r.sadd(cls._keys_name, key),
-            cls._r.hmset_dict(key, vars(entity))
+            cls._r.hmset(key, vars(entity))
         )
 
     def _entity_from_raw(cls, raw_entity):
@@ -34,7 +34,7 @@ class Schema(type):
         Returns:
             raw_entity (a dict) with correct types of the values
         """
-        return {k.decode(): v.decode() for k, v in raw_entity.items()}
+        return raw_entity
 
     def _key_from_id(cls, id_):
         return f'{cls._schema_name}:{id_}'
