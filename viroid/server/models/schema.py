@@ -1,6 +1,3 @@
-import asyncio
-
-
 class Schema(type):
     def __init__(cls, name, bases, dict):
         super().__init__(name, bases, dict)
@@ -9,8 +6,9 @@ class Schema(type):
         cls._r = None
 
     async def get_all(cls):
+        # somehow use asyncio.gather to speed it up!
         keys = await cls._r.smembers(cls._keys_name)
-        return await asyncio.gather(*(cls._entity_from_raw(cls._r.hgetall(k)) for k in keys))
+        return [await cls._entity_from_raw(cls._r.hgetall(k)) for k in keys]
 
     async def get(cls, id_):
         raw_entity = await cls._r.hgetall(cls._key_from_id(id_))
@@ -32,7 +30,7 @@ class Schema(type):
         Returns:
             raw_entity (a dict) with correct types of the values
         """
-        return {k.decode(): v.decode() for k, v in raw_entity.items()}
+        return raw_entity
 
     def _key_from_id(cls, id_):
         return f'{cls._schema_name}:{id_}'

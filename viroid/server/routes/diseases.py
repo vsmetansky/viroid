@@ -30,7 +30,7 @@ async def query(request):
     if target['type'] == 'table':
         series = target['target']
         filters = request_json['adhocFilters']
-        return web.json_response(await SERIES_DATA.get(series)[0].body(filters))
+        return web.json_response(await SERIES_DATA.get(series)[0].body())
 
 
 @routes.post('/annotations')

@@ -1,5 +1,6 @@
 import asyncio
 
+import aredis
 from aiohttp import web
 
 from viroid.server.aggregates import Diseases
@@ -7,18 +8,13 @@ from viroid.server.models.covid_19 import Covid19
 from viroid.server.models.influenza import Influenza
 from viroid.server.routes import diseases
 
-
-async def close_redis(redis):
-    redis.close()
-    await redis.wait_closed()
+MAX_CONNECTION_NUM = 100
 
 
 async def init_redis(app):
-    try:
-        app['redis'] = await aioredis.create_redis_pool(('localhost', 6379))
-        diseases = Diseases(app['redis'], Covid19, Influenza)
-    except asyncio.CancelledError:
-        await close_redis(app['redis'])
+    app['redis'] = aredis.StrictRedisCluster(
+        host='localhost', port=7000, decode_responses=True, max_connections=MAX_CONNECTION_NUM)
+    diseases = Diseases(app['redis'], Covid19, Influenza)
 
 
 async def start_background_tasks(app):
@@ -28,7 +24,6 @@ async def start_background_tasks(app):
 async def cleanup_background_tasks(app):
     app['init_redis'].cancel()
     await app['init_redis']
-    await close_redis(app['redis'])
 
 
 def create_app():
